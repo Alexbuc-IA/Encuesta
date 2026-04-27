@@ -314,7 +314,18 @@
     <div class="divisor"></div>
 
     <div class="pregunta">
-      <div class="pregunta-texto">4. ¿Cómo califica nuestro servicio?</div>
+      <div class="pregunta-texto">4. ¿Sabías que tenemos promociones del 10% en productos seleccionados estos días?
+        <span style="display:block;font-size:13px;font-weight:400;color:var(--gris);margin-top:4px;">(Jueves: gomitas &nbsp;|&nbsp; Viernes: botana &nbsp;|&nbsp; Sábado: chocolates)</span>
+      </div>
+      <div class="opciones-sino">
+        <button class="btn-sino" onclick="selSiNo('p4','si',this)">✓ &nbsp;Sí</button>
+        <button class="btn-sino" onclick="selSiNo('p4','no',this)">✗ &nbsp;No</button>
+      </div>
+    </div>
+    <div class="divisor"></div>
+
+    <div class="pregunta">
+      <div class="pregunta-texto">5. ¿Cómo califica nuestro servicio?</div>
       <div class="opciones-emoji">
         <button class="btn-emoji bueno"   onclick="selEmoji('bueno',this)">
           <span class="emoji">🙂</span><span class="etiqueta">Bueno</span>
@@ -330,7 +341,7 @@
     <div class="divisor"></div>
 
     <div class="pregunta">
-      <div class="pregunta-texto">5. Cuéntanos cómo fue tu experiencia:</div>
+      <div class="pregunta-texto">6. Cuéntanos cómo fue tu experiencia:</div>
       <textarea class="comentario-area" id="comentario"
         placeholder="Escribe aquí tus comentarios..."
         oninput="actualizarProgreso()"></textarea>
@@ -364,7 +375,7 @@
 <script>
   const FORMSPREE_URL = "https://formspree.io/f/xqewkgwr";
 
-  const respuestas = { sucursal:null, p1:null, p2:null, p3:null, calificacion:null };
+  const respuestas = { sucursal:null, p1:null, p2:null, p3:null, p4:null, calificacion:null };
 
   function selSucursal(sel) {
     respuestas.sucursal = sel.value || null;
@@ -389,15 +400,16 @@
     if(respuestas.p1) c++;
     if(respuestas.p2) c++;
     if(respuestas.p3) c++;
+    if(respuestas.p4) c++;
     if(respuestas.calificacion) c++;
     if(document.getElementById('comentario').value.trim()) c++;
-    document.getElementById('progreso').style.width = (c/6*100)+'%';
+    document.getElementById('progreso').style.width = (c/7*100)+'%';
   }
 
   async function enviar() {
     const alerta = document.getElementById('alerta');
     const errorMsg = document.getElementById('error-msg');
-    if(!respuestas.sucursal||!respuestas.p1||!respuestas.p2||!respuestas.p3||!respuestas.calificacion) {
+    if(!respuestas.sucursal||!respuestas.p1||!respuestas.p2||!respuestas.p3||!respuestas.p4||!respuestas.calificacion) {
       alerta.classList.add('visible');
       setTimeout(()=>alerta.classList.remove('visible'),3000);
       return;
@@ -414,6 +426,7 @@
       "¿Lo saludaron al entrar?": respuestas.p1,
       "¿El staff se acercó?": respuestas.p2,
       "¿Encontró lo que buscaba?": respuestas.p3,
+      "¿Sabía de las promociones del 10%?": respuestas.p4,
       "Calificación del servicio": respuestas.calificacion,
       "Comentarios": document.getElementById('comentario').value.trim() || "(Sin comentarios)",
       "Fecha": new Date().toLocaleString('es-MX')
@@ -447,7 +460,7 @@
   }
 
   function reiniciar() {
-    respuestas.sucursal=null; respuestas.p1=null; respuestas.p2=null; respuestas.p3=null; respuestas.calificacion=null;
+    respuestas.sucursal=null; respuestas.p1=null; respuestas.p2=null; respuestas.p3=null; respuestas.p4=null; respuestas.calificacion=null;
     const sel = document.getElementById('sucursal');
     sel.value=''; sel.classList.remove('sel');
     document.querySelectorAll('.btn-sino').forEach(b=>b.classList.remove('sel-si','sel-no'));
