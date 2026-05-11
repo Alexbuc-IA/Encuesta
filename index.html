@@ -207,7 +207,20 @@
     pointer-events:none; color:var(--cafe-claro); font-size:18px; line-height:1;
   }
 
+  /* Inputs opcionales */
+  .input-opcional {
+    width:100%; padding:13px 16px;
+    border-radius:14px; border:2.5px solid #e4d5c5;
+    background:var(--crema2); font-family:'DM Sans',sans-serif;
+    font-size:14px; color:var(--texto); outline:none;
+    transition:border-color .2s;
+  }
+  .input-opcional:focus { border-color:var(--cafe-claro); }
+  .input-opcional::placeholder { color:var(--gris); }
+  .opcionales-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+
   @media (max-width:420px) {
+    .opcionales-grid { grid-template-columns:1fr; }
     .card { padding:24px 16px 22px; }
     .logo-img { max-width:180px; }
   }
@@ -322,6 +335,16 @@
         oninput="actualizarProgreso()"></textarea>
     </div>
 
+    <div class="divisor"></div>
+
+    <div class="pregunta">
+      <div class="pregunta-texto">Datos de contacto <span style="font-size:12px;font-weight:400;color:var(--gris);">(Opcional)</span></div>
+      <div class="opcionales-grid">
+        <input class="input-opcional" type="text" id="nombre" placeholder="Nombre" maxlength="80">
+        <input class="input-opcional" type="tel" id="telefono" placeholder="Teléfono" maxlength="15">
+      </div>
+    </div>
+
     <div class="alerta" id="alerta">⚠️ Por favor responde todas las preguntas antes de enviar.</div>
     <div class="error-msg" id="error-msg">⚠️ Hubo un problema al enviar. Intenta de nuevo.</div>
 
@@ -404,6 +427,8 @@
       "¿Sabía de las promociones del 10%?": respuestas.p4,
       "Calificación del servicio": respuestas.calificacion,
       "Comentarios": document.getElementById('comentario').value.trim() || "(Sin comentarios)",
+      "Nombre": document.getElementById('nombre').value.trim() || "(No proporcionado)",
+      "Teléfono": document.getElementById('telefono').value.trim() || "(No proporcionado)",
       "Fecha": new Date().toLocaleString('es-MX')
     };
 
@@ -441,6 +466,8 @@
     document.querySelectorAll('.btn-sino').forEach(b=>b.classList.remove('sel-si','sel-no'));
     document.querySelectorAll('.btn-emoji').forEach(b=>b.classList.remove('sel'));
     document.getElementById('comentario').value='';
+    document.getElementById('nombre').value='';
+    document.getElementById('telefono').value='';
     document.getElementById('progreso').style.width='0%';
     const btn = document.getElementById('btn-enviar');
     btn.classList.remove('cargando'); btn.disabled=false;
