@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Los Canastos – Encuesta de Satisfacción</title>
+<link rel="icon" type="image/png" href="loscanastoslogo.png">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --vino:        #7b1c22;
+    --vino-claro:  #a82a33;
+    --cafe:        #5c3317;
+    --cafe-claro:  #8b5e3c;
+    --crema:       #fdf6ee;
+    --crema2:      #f5e9d8;
+    --texto:       #2e1a0e;
+    --gris:        #9a8070;
+    --blanco:      #ffffff;
+    --sombra:      0 8px 40px rgba(91,29,23,0.13);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--crema);
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    overflow-x: hidden;
+  }
+  body::before {
+    content:'';
+    position:fixed; inset:0;
+    background:
+      radial-gradient(ellipse 60% 40% at 10% 10%, rgba(123,28,34,0.08) 0%, transparent 70%),
+      radial-gradient(ellipse 50% 50% at 90% 90%, rgba(92,51,23,0.09) 0%, transparent 70%);
+    pointer-events:none;
+  }
+
+  .pantalla { display:none; width:100%; max-width:560px; padding:20px; animation:fadeIn .45s cubic-bezier(.4,0,.2,1); }
+  .pantalla.activa { display:block; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
+
+  .card {
+    background: var(--blanco);
+    border-radius: 28px;
+    box-shadow: var(--sombra);
+    padding: 36px 32px 32px;
+    position: relative; overflow:hidden;
+  }
+  .card::before {
+    content:'';
+    position:absolute; top:0; left:0; right:0; height:6px;
+    background: linear-gradient(90deg, var(--vino), var(--cafe-claro), var(--vino-claro));
+    border-radius: 28px 28px 0 0;
+  }
+
+  .logo-area { text-align:center; margin-bottom:0px; }
+  .logo-img { max-width:180px; width:65%; margin:0 auto 0px; display:block; mix-blend-mode:multiply; }
+  .logo-tagline {
+    font-size:12px; color:var(--gris); font-weight:300;
+    letter-spacing:2.5px; text-transform:uppercase; margin-top:0px;
+  }
+
+  .progreso-bar { height:4px; background:#ede0d0; border-radius:99px; margin-bottom:24px; overflow:hidden; }
+  .progreso-fill {
+    height:100%;
+    background: linear-gradient(90deg, var(--vino), var(--cafe-claro));
+    border-radius:99px;
+    transition: width .5s cubic-bezier(.4,0,.2,1);
+  }
+
+  .pregunta { margin-bottom:20px; }
+  .pregunta-texto { font-size:15px; font-weight:500; color:var(--texto); margin-bottom:10px; line-height:1.45; }
+
+  .opciones-sino { display:flex; gap:10px; }
+  .btn-sino {
+    flex:1; padding:12px 0; border-radius:14px;
+    border:2.5px solid #e4d5c5; background:var(--crema2);
+    font-family:'DM Sans',sans-serif; font-size:15px; font-weight:500;
+    color:var(--gris); cursor:pointer;
+    transition: all .22s cubic-bezier(.4,0,.2,1);
+  }
+  .btn-sino:active { transform:scale(0.96); }
+  .btn-sino.sel-si  { background:var(--cafe); border-color:var(--cafe); color:var(--blanco); box-shadow:0 4px 16px rgba(92,51,23,.30); }
+  .btn-sino.sel-no  { background:var(--vino); border-color:var(--vino); color:var(--blanco); box-shadow:0 4px 16px rgba(123,28,34,.30); }
+
+  .opciones-emoji { display:flex; gap:10px; justify-content:center; }
+  .btn-emoji {
+    flex:1; display:flex; flex-direction:column; align-items:center; gap:6px;
+    padding:14px 6px 10px; border-radius:16px;
+    border:2.5px solid #e4d5c5; background:var(--crema2);
+    cursor:pointer; transition:all .22s cubic-bezier(.4,0,.2,1);
+  }
+  .btn-emoji:active { transform:scale(0.93); }
+  .btn-emoji .emoji { font-size:34px; transition:transform .2s; }
+  .btn-emoji .etiqueta { font-size:12px; font-weight:500; color:var(--gris); }
+
+  .btn-emoji.bueno.sel   { background:#f5ede6; border-color:var(--cafe);       box-shadow:0 4px 14px rgba(92,51,23,.22); }
+  .btn-emoji.regular.sel { background:#fdf0d0; border-color:#b8860b;           box-shadow:0 4px 14px rgba(184,134,11,.22); }
+  .btn-emoji.malo.sel    { background:#fbeaeb; border-color:var(--vino);       box-shadow:0 4px 14px rgba(123,28,34,.25); }
+  .btn-emoji.sel .emoji  { transform:scale(1.25); }
+  .btn-emoji.bueno.sel .etiqueta   { color:var(--cafe);  font-weight:700; }
+  .btn-emoji.regular.sel .etiqueta { color:#8b6914;       font-weight:700; }
+  .btn-emoji.malo.sel .etiqueta    { color:var(--vino);  font-weight:700; }
+
+  .comentario-area {
+    width:100%; min-height:90px; padding:14px 16px;
+    border-radius:16px; border:2.5px solid #e4d5c5;
+    background:var(--crema2); font-family:'DM Sans',sans-serif;
+    font-size:14px; color:var(--texto); resize:none; outline:none;
+    transition:border-color .2s; line-height:1.55;
+  }
+  .comentario-area:focus { border-color:var(--cafe-claro); }
+  .comentario-area::placeholder { color:var(--gris); }
+
+  .divisor { height:1px; background:#ede0d0; margin:4px 0 18px; }
+
+  .btn-enviar {
+    width:100%; padding:16px; border-radius:18px; border:none;
+    background: linear-gradient(135deg, var(--vino) 0%, var(--vino-claro) 100%);
+    color:var(--blanco);
+    font-family:'Playfair Display',serif; font-size:18px; font-weight:700;
+    cursor:pointer; margin-top:22px;
+    transition:all .25s cubic-bezier(.4,0,.2,1);
+    box-shadow:0 6px 20px rgba(123,28,34,.28);
+  }
+  .btn-enviar:active { transform:scale(0.97); }
+  .btn-enviar:hover  { box-shadow:0 8px 28px rgba(123,28,34,.38); }
+
+  .alerta {
+    display:none; background:#fdf0d0; border:1.5px solid #b8860b;
+    color:#7a5a00; border-radius:12px; padding:10px 14px;
+    font-size:13px; margin-top:12px; text-align:center;
+  }
+  .alerta.visible { display:block; }
+
+  .error-msg {
+    display:none; background:#fbeaeb; border:1.5px solid var(--vino);
+    color:var(--vino); border-radius:12px; padding:10px 14px;
+    font-size:13px; margin-top:12px; text-align:center;
+  }
+  .error-msg.visible { display:block; }
+
+  .spinner {
+    display:none; width:22px; height:22px;
+    border:3px solid rgba(255,255,255,.4);
+    border-top-color:#fff; border-radius:50%;
+    animation:spin .7s linear infinite;
+    margin:0 auto;
+  }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  .btn-enviar.cargando .spinner { display:inline-block; }
+  .btn-enviar.cargando .btn-texto { display:none; }
+
+  .gracias-icono {
+    font-size:72px; text-align:center; display:block; margin-bottom:14px;
+    animation:pop .5s cubic-bezier(.17,.67,.4,1.4) both;
+  }
+  @keyframes pop { from{transform:scale(0.3);opacity:0} to{transform:scale(1);opacity:1} }
+  .gracias-titulo {
+    font-family:'Playfair Display',serif; font-size:26px; font-weight:900;
+    color:var(--vino); text-align:center; margin-bottom:8px;
+  }
+  .gracias-sub { font-size:15px; color:var(--gris); text-align:center; line-height:1.6; margin-bottom:26px; }
+  .resumen-cal { text-align:center; font-size:46px; margin:8px 0 6px; animation:pop .4s cubic-bezier(.17,.67,.4,1.4) .1s both; }
+  .resumen-texto { text-align:center; font-size:14px; color:var(--gris); margin-bottom:20px; }
+
+  .btn-nueva {
+    width:100%; padding:15px; border-radius:16px;
+    border:2.5px solid var(--vino); background:transparent;
+    color:var(--vino); font-family:'DM Sans',sans-serif;
+    font-size:16px; font-weight:600; cursor:pointer; transition:all .22s;
+  }
+  .btn-nueva:hover { background:var(--vino); color:var(--blanco); }
+  .btn-nueva:active { transform:scale(0.97); }
+
+  .select-sucursal-wrap { position:relative; }
+  .select-sucursal {
+    width:100%; padding:13px 44px 13px 16px;
+    border-radius:14px; border:2.5px solid #e4d5c5;
+    background:var(--crema2); appearance:none; -webkit-appearance:none;
+    font-family:'DM Sans',sans-serif; font-size:15px; font-weight:500;
+    color:var(--texto); cursor:pointer; outline:none;
+    transition:border-color .2s, box-shadow .2s;
+  }
+  .select-sucursal:focus { border-color:var(--cafe-claro); box-shadow:0 0 0 3px rgba(139,94,60,.12); }
+  .select-sucursal.sel { border-color:var(--cafe); background:#f5ede6; color:var(--cafe); }
+  .select-sucursal option[value=""] { color:var(--gris); }
+  .select-arrow {
+    position:absolute; right:14px; top:50%; transform:translateY(-50%);
+    pointer-events:none; color:var(--cafe-claro); font-size:18px; line-height:1;
+  }
+
+  .input-opcional {
+    width:100%; padding:13px 16px;
+    border-radius:14px; border:2.5px solid #e4d5c5;
+    background:var(--crema2); font-family:'DM Sans',sans-serif;
+    font-size:14px; color:var(--texto); outline:none;
+    transition:border-color .2s;
+  }
+  .input-opcional:focus { border-color:var(--cafe-claro); }
+  .input-opcional::placeholder { color:var(--gris); }
+  .opcionales-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+
+  @media (max-width:420px) {
+    .opcionales-grid { grid-template-columns:1fr; }
+    .card { padding:24px 16px 22px; }
+    .logo-img { max-width:180px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ENCUESTA -->
+<div class="pantalla activa" id="p-encuesta">
+  <div class="card">
+    <div class="logo-area">
+      <img class="logo-img" src="../loscanastoslogo.png" alt="Los Canastos">
+      <div class="logo-tagline">Encuesta de Satisfacción – Torreón</div>
+    </div>
+
+    <div class="progreso-bar">
+      <div class="progreso-fill" id="progreso" style="width:0%"></div>
+    </div>
+
+    <div class="pregunta">
+      <div class="pregunta-texto">¿Qué sucursal visitaste?</div>
+      <div class="select-sucursal-wrap">
+        <select class="select-sucursal" id="sucursal" onchange="selSucursal(this)">
+          <option value="">— Selecciona tu sucursal —</option>
+          <option value="Arcoíris">Arcoíris</option>
+          <option value="La Rosita">La Rosita</option>
+          <option value="Fresno">Fresno</option>
+          <option value="Mercado Juárez">Mercado Juárez</option>
+        </select>
+        <span class="select-arrow">▾</span>
+      </div>
+    </div>
+    <div class="divisor"></div>
+
+    <div class="pregunta">
+      <div class="pregunta-texto">1. ¿Lo saludaron al entrar a nuestra sucursal?</div>
+      <div class="opciones-sino">
+        <button class="btn-sino" onclick="selSiNo('p1','si',this)">✓ &nbsp;Sí</button>
+        <button class="btn-sino" onclick="selSiNo('p1','no',this)">✗ &nbsp;No</button>
+      </div>
+    </div>
+    <div class="divisor"></div>
+
+    <div class="pregunta">
+      <div class="pregunta-texto">2. ¿Alguien del staff se acercó para ponerse a sus órdenes?</div>
+      <div class="opciones-sino">
+        <button class="btn-sino" onclick="selSiNo('p2','si',this)">✓ &nbsp;Sí</button>
+        <button class="btn-sino" onclick="selSiNo('p2','no',this)">✗ &nbsp;No</button>
+      </div>
+    </div>
+    <div class="divisor"></div>
+
+    <div class="pregunta">
+      <div class="pregunta-texto">3. ¿Encontró todo lo que buscaba?</div>
+      <div class="opciones-sino">
+        <button class="btn-sino" onclick="selSiNo('p3','si',this)">✓ &nbsp;Sí</button>
+        <button class="btn-sino" onclick="selSiNo('p3','no',this)">✗ &nbsp;No</button>
+      </div>
+    </div>
+    <div class="divisor"></div>
+
+    <div class="pregunta">
+      <div class="pregunta-texto">4. ¿Sabías que tenemos promociones del 10% en productos seleccionados estos días?
+        <span style="display:block;font-size:13px;font-weight:400;color:var(--gris);margin-top:4px;">(Jueves: gomitas &nbsp;|&nbsp; Viernes: botana &nbsp;|&nbsp; Sábado: chocolates)</span>
+      </div>
+      <div class="opciones-sino">
+        <button class="btn-sino" onclick="selSiNo('p4','si',this)">✓ &nbsp;Sí</button>
+        <button class="btn-sino" onclick="selSiNo('p4','no',this)">✗ &nbsp;No</button>
+      </div>
+    </div>
+    <div class="divisor"></div>
+
+    <div class="pregunta">
+      <div class="pregunta-texto">5. ¿Cómo califica nuestro servicio?</div>
+      <div class="opciones-emoji">
+        <button class="btn-emoji bueno"   onclick="selEmoji('bueno',this)">
+          <span class="emoji">🙂</span><span class="etiqueta">Bueno</span>
+        </button>
+        <button class="btn-emoji regular" onclick="selEmoji('regular',this)">
+          <span class="emoji">😐</span><span class="etiqueta">Regular</span>
+        </button>
+        <button class="btn-emoji malo"    onclick="selEmoji('malo',this)">
+          <span class="emoji">😠</span><span class="etiqueta">Malo</span>
+        </button>
+      </div>
+    </div>
+    <div class="divisor"></div>
+
+    <div class="pregunta">
+      <div class="pregunta-texto">6. Cuéntanos cómo fue tu experiencia:</div>
+      <textarea class="comentario-area" id="comentario"
+        placeholder="Escribe aquí tus comentarios..."
+        oninput="actualizarProgreso()"></textarea>
+    </div>
+
+    <div class="divisor"></div>
+
+    <div class="pregunta">
+      <div class="pregunta-texto">Datos de contacto <span style="font-size:12px;font-weight:400;color:var(--gris);">(Opcional)</span></div>
+      <div class="opcionales-grid">
+        <input class="input-opcional" type="text" id="nombre" placeholder="Nombre" maxlength="80">
+        <input class="input-opcional" type="tel" id="telefono" placeholder="Teléfono" maxlength="15">
+      </div>
+    </div>
+
+    <div class="alerta" id="alerta">⚠️ Por favor responde todas las preguntas antes de enviar.</div>
+    <div class="error-msg" id="error-msg">⚠️ Hubo un problema al enviar. Intenta de nuevo.</div>
+
+    <button class="btn-enviar" id="btn-enviar" onclick="enviar()">
+      <span class="btn-texto">Enviar Encuesta →</span>
+      <span class="spinner"></span>
+    </button>
+  </div>
+</div>
+
+<!-- GRACIAS -->
+<div class="pantalla" id="p-gracias">
+  <div class="card">
+    <div class="logo-area">
+      <img class="logo-img" src="../loscanastoslogo.png" alt="Los Canastos">
+    </div>
+    <span class="gracias-icono">✅</span>
+    <div class="gracias-titulo">¡Muchas gracias!</div>
+    <p class="gracias-sub">Tu opinión es muy importante para nosotros.<br>Seguiremos mejorando para servirte mejor.</p>
+    <div class="resumen-cal" id="resumen-emoji"></div>
+    <div class="resumen-texto" id="resumen-texto"></div>
+    <button class="btn-nueva" onclick="reiniciar()">Nueva encuesta</button>
+  </div>
+</div>
+
+<script>
+  const FORMSPREE_URL = "https://formspree.io/f/xzdwwyol";
+
+  const respuestas = { sucursal:null, p1:null, p2:null, p3:null, p4:null, calificacion:null };
+
+  function selSucursal(sel) {
+    respuestas.sucursal = sel.value || null;
+    sel.classList.toggle('sel', !!sel.value);
+    actualizarProgreso();
+  }
+  function selSiNo(preg, val, btn) {
+    respuestas[preg] = val;
+    btn.parentElement.querySelectorAll('.btn-sino').forEach(b => b.classList.remove('sel-si','sel-no'));
+    btn.classList.add(val==='si' ? 'sel-si' : 'sel-no');
+    actualizarProgreso();
+  }
+  function selEmoji(val, btn) {
+    respuestas.calificacion = val;
+    document.querySelectorAll('.btn-emoji').forEach(b => b.classList.remove('sel'));
+    btn.classList.add('sel');
+    actualizarProgreso();
+  }
+  function actualizarProgreso() {
+    let c = 0;
+    if(respuestas.sucursal) c++;
+    if(respuestas.p1) c++;
+    if(respuestas.p2) c++;
+    if(respuestas.p3) c++;
+    if(respuestas.p4) c++;
+    if(respuestas.calificacion) c++;
+    if(document.getElementById('comentario').value.trim()) c++;
+    document.getElementById('progreso').style.width = (c/7*100)+'%';
+  }
+
+  async function enviar() {
+    const alerta = document.getElementById('alerta');
+    const errorMsg = document.getElementById('error-msg');
+    if(!respuestas.sucursal||!respuestas.p1||!respuestas.p2||!respuestas.p3||!respuestas.p4||!respuestas.calificacion) {
+      alerta.classList.add('visible');
+      setTimeout(()=>alerta.classList.remove('visible'),3000);
+      return;
+    }
+    alerta.classList.remove('visible');
+    errorMsg.classList.remove('visible');
+
+    const btn = document.getElementById('btn-enviar');
+    btn.classList.add('cargando');
+    btn.disabled = true;
+
+    const datos = {
+      "Ciudad": "Torreón",
+      "Sucursal visitada": respuestas.sucursal,
+      "¿Lo saludaron al entrar?": respuestas.p1,
+      "¿El staff se acercó?": respuestas.p2,
+      "¿Encontró lo que buscaba?": respuestas.p3,
+      "¿Sabía de las promociones del 10%?": respuestas.p4,
+      "Calificación del servicio": respuestas.calificacion,
+      "Comentarios": document.getElementById('comentario').value.trim() || "(Sin comentarios)",
+      "Nombre": document.getElementById('nombre').value.trim() || "(No proporcionado)",
+      "Teléfono": document.getElementById('telefono').value.trim() || "(No proporcionado)",
+      "Fecha": new Date().toLocaleString('es-MX')
+    };
+
+    try {
+      const res = await fetch(FORMSPREE_URL, {
+        method:'POST',
+        headers:{'Content-Type':'application/json','Accept':'application/json'},
+        body: JSON.stringify(datos)
+      });
+      if(res.ok) {
+        const emojis = {bueno:'🙂',regular:'😐',malo:'😠'};
+        const textos = {
+          bueno:'Calificaste nuestro servicio como Bueno',
+          regular:'Calificaste nuestro servicio como Regular',
+          malo:'Calificaste nuestro servicio como Malo'
+        };
+        document.getElementById('resumen-emoji').textContent = emojis[respuestas.calificacion];
+        document.getElementById('resumen-texto').textContent = textos[respuestas.calificacion];
+        document.getElementById('p-encuesta').classList.remove('activa');
+        document.getElementById('p-gracias').classList.add('activa');
+      } else {
+        throw new Error('Error en respuesta');
+      }
+    } catch(e) {
+      errorMsg.classList.add('visible');
+      btn.classList.remove('cargando');
+      btn.disabled = false;
+    }
+  }
+
+  function reiniciar() {
+    respuestas.sucursal=null; respuestas.p1=null; respuestas.p2=null; respuestas.p3=null; respuestas.p4=null; respuestas.calificacion=null;
+    const sel = document.getElementById('sucursal');
+    sel.value=''; sel.classList.remove('sel');
+    document.querySelectorAll('.btn-sino').forEach(b=>b.classList.remove('sel-si','sel-no'));
+    document.querySelectorAll('.btn-emoji').forEach(b=>b.classList.remove('sel'));
+    document.getElementById('comentario').value='';
+    document.getElementById('nombre').value='';
+    document.getElementById('telefono').value='';
+    document.getElementById('progreso').style.width='0%';
+    const btn = document.getElementById('btn-enviar');
+    btn.classList.remove('cargando'); btn.disabled=false;
+    document.getElementById('p-gracias').classList.remove('activa');
+    document.getElementById('p-encuesta').classList.add('activa');
+  }
+</script>
+</body>
+</html>
